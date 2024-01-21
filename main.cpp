@@ -8,17 +8,17 @@ using namespace std;
 unsigned ALPHABET_SIZE = 128;
 
 
-inline void printBinaryAndHexFromDecimal(unsigned int decimal, unsigned bits_size) {
+inline void printBinaryAndHexFromDecimal(string name, unsigned int decimal, unsigned bits_size) {
   if (bits_size == 32) {
     bitset<sizeof(unsigned int) * CHAR_BIT> binary(decimal); //sizeof() returns bytes, not bits!
 //    cout << "D: " << decimal << "\t";
 //    cout << "H: 0x" << hex << (unsigned long) decimal << "\t";
-    cout << "B: " << binary << endl;
+    cout << "name: " << binary << endl;
   } else if (bits_size == 64) {
     bitset<sizeof(unsigned long) * CHAR_BIT> binary(decimal); //sizeof() returns bytes, not bits!
 //    cout << "D: " << decimal << "\t";
 //    cout << "H: 0x" << hex << (unsigned long) decimal << "\t";
-    cout << "B: " << binary << endl;
+    cout << name << ": " << binary << endl;
   }
 }
 
@@ -37,18 +37,21 @@ void fasm(string &text, string &pattern, int editDistanceThreshold) {
 
   unsigned long initialValue = (1 << patternSize) - 1;
   string subPattern = pattern.substr(0, editDistanceThreshold + 1);
-  cout << subPattern << endl;
 
   // Pre processing
   for (unsigned i = 0; i < ALPHABET_SIZE; i++) {
+//    char charvalue = (char (i) + 0);
+//    cout << charvalue << endl;
     maskFromPatternSize[i] = initialValue;
 
+    // t[c]
     for (int j = patternSize - 1; j >= 0; j--) {
       if (pattern[j] == i) {
         maskFromPatternSize[i] &= (~ (1 << j));
       }
     }
 
+    // T[c]
     for (unsigned j = 0; j <= patternSize - editDistanceThreshold - 1; j++) {
       if (j == 0) {
         mask[i] = s_j(maskFromPatternSize[i], j, editDistanceThreshold + 1);
@@ -57,6 +60,7 @@ void fasm(string &text, string &pattern, int editDistanceThreshold) {
       }
     }
 
+    // S[c]
     S[i] = subPattern.find(i) != string::npos ? 1 : 0;
   }
 
@@ -64,17 +68,17 @@ void fasm(string &text, string &pattern, int editDistanceThreshold) {
   unsigned long M1_mask = 1;
 
   unsigned long D_in = D_in_mask;
-  for (unsigned i = 0; i < patternSize - editDistanceThreshold; i++) {
+  for (unsigned i = 0; i < patternSize - editDistanceThreshold - 1; i++) {
     D_in = (D_in << (editDistanceThreshold + 2)) | D_in_mask;
   }
 
   unsigned long M1 = M1_mask;
-  for (unsigned i = 0; i < patternSize - editDistanceThreshold; i++) {
+  for (unsigned i = 0; i < patternSize - editDistanceThreshold - 1; i++) {
     M1 = (M1 << (editDistanceThreshold + 2)) | M1_mask;
   }
 
   unsigned long M2 = M1_mask;
-  for (unsigned i = 0; i < patternSize - editDistanceThreshold - 1; i++) {
+  for (unsigned i = 0; i < patternSize - editDistanceThreshold - 2; i++) {
     M2 = (M2 << (editDistanceThreshold + 2)) | M1_mask;
   }
   M2 = (M2 << (editDistanceThreshold + 2)) | D_in_mask;
@@ -105,13 +109,13 @@ void fasm(string &text, string &pattern, int editDistanceThreshold) {
 }
 
 int main() {
-  string text = "joao e maria juntos em test e text";
-  string pattern = "text";
+  string text = "carro carro auto";
+  string pattern = "auto";
 
-  for (int i = 0; i < text.size(); i++) {
-    cout << "i: " << i << " char: " << text[i] << endl;
-  }
+//  for (int i = 0; i < text.size(); i++) {
+//    cout << "i: " << i << " char: " << text[i] << endl;
+//  }
 
-  fasm(text, pattern, 0);
+  fasm(text, pattern, 2);
   return 0;
 }
